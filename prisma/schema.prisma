@@ -1,0 +1,54 @@
+// basic idea: here you define your local prisma data models which you can use across your app to read and write data on your (remote) database
+// prisma synchronizes your defined local data models with your remote database. Anytime you change anything that affects the data models, run the command "npx prisma db push" to synchronize your local data models with your remote database.
+
+// specify how Prisma should generate the client for your project
+generator client {
+  provider = "prisma-client-js"
+}
+
+// specify the details of the database that Prisma ORM should connect to, to synchronize your local data models with- and perform actions on the (remote) DB
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// enum type is a list of valid entries
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// data models (tables)
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  // store account entries (indicates that a single User can be linked to multiple account entries)
+  accounts      Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  // one-to-many relationship: One User can be associated with many Accounts ('Account[]'), but each Account is associated with one User (FK 'userId')
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // unique rule for the combination of 'provider' and 'providerAccountId'
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
