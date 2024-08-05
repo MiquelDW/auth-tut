@@ -11,8 +11,7 @@ const Settings = async () => {
         action={async () => {
           "use server";
 
-          // end user's session on the server side by invalidating the JWT/session token
-          // it removes the session cookies stored in the client's browser (JWT is stored in an HttpOnly cookie on the client), effectively logging the user out from the client side as well
+          // remove the session cookies stored in the client's browser (JWT is stored in an HttpOnly cookie on the client), effectively ending the session and logging the user out
           await signOut({ redirectTo: "/auth/login" });
         }}
       >

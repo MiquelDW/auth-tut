@@ -2,7 +2,9 @@
 
 import * as z from "zod";
 import CardWrapper from "./CardWrapper";
-
+// in non-page components, (dynamic) query parameters are not passed as a prop
+// use the 'useSearchParams' hook to access the dynamic query parameters from the current URL
+import { useSearchParams } from "next/navigation";
 // you can show a loading state during operations (function, redirecting user etc) with the 'startTransition' function
 import { useState, useTransition } from "react";
 // hook that handles form state and validation
@@ -25,6 +27,16 @@ import FormSuccess from "../FormSuccess";
 import { login } from "@/actions/login";
 
 const LoginForm = () => {
+  // retrieve the (dynamic) query parameter(s) from the current URL
+  const searchParams = useSearchParams();
+  // retrieve the value of the dynamic query parameter "error"
+  const urlError = searchParams.get("error") || "";
+  // determine the error message based on the retrieved value
+  const errorMessage =
+    urlError === "OAuthAccountNotLinked"
+      ? "Email already in use with different provider!"
+      : "";
+
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
 
@@ -52,8 +64,8 @@ const LoginForm = () => {
     // log the user in
     startTransition(() => {
       login(values).then((data) => {
-        setError(data.error);
-        setSuccess(data.success);
+        setError(data?.error);
+        setSuccess(data?.success);
       });
     });
   };
@@ -115,7 +127,7 @@ const LoginForm = () => {
             />
           </div>
 
-          <FormError message={error} />
+          <FormError message={error || errorMessage} />
           <FormSuccess message={success} />
 
           {/* submit button */}

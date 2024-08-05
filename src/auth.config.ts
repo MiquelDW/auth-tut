@@ -19,7 +19,7 @@ export default {
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
     Credentials({
-      // define custom authorization logic inside the 'authorize' function, which verifies the user-provided credentials
+      // define custom authentication logic inside the 'authorize' function, which verifies the user-provided credentials
       // the function activates when a user attempts to sign in with credentials
       authorize: async (credentials) => {
         // validate the form data again in the backend
@@ -38,7 +38,7 @@ export default {
           // confirm if user entered the correct password by comparing the given 'password' with the stored password
           const passwordMatch = await bcrypt.compare(password, user.password);
 
-          // return retrieved 'user' if compared passwords match
+          // return retrieved 'user' if compared passwords match (successful authentication)
           if (passwordMatch) return user;
         }
 
