@@ -12,8 +12,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   await resend.emails.send({
     // center of the email, verify your email in <> to send emails from a custom email
     from: "Auth-tut <onboarding@resend.dev>",
-    // send email to the user's email (filled in at Stripe checkout session)
-    // to: [event.data.object.customer_details.email],
+    // send email to the user's email
     to: email,
     subject: "Verify your email",
     html: `<p>Click <a href="${verificationLink}">here</a> to confirm email.</p>`,
@@ -21,17 +20,28 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 };
 
 export const sendPasswordEmail = async (email: string, token: string) => {
-  // link that redirects user to a page to verify email
+  // link that redirects user to a page to change password
   const resetLink = `http://localhost:3000/auth/new-password?token=${token}`;
 
   // send email to the user
   await resend.emails.send({
     // center of the email, verify your email in <> to send emails from a custom email
     from: "Auth-tut <onboarding@resend.dev>",
-    // send email to the user's email (filled in at Stripe checkout session)
-    // to: [event.data.object.customer_details.email],
+    // send email to the user's email
     to: email,
     subject: "Reset your password",
     html: `<p>Click <a href="${resetLink}">here</a> to reset password.</p>`,
+  });
+};
+
+export const sendTwoFactorEmail = async (email: string, token: string) => {
+  // send email to the user
+  await resend.emails.send({
+    // center of the email, verify your email in <> to send emails from a custom email
+    from: "Auth-tut <onboarding@resend.dev>",
+    // send email to the user's email
+    to: email,
+    subject: "2FA Code",
+    html: `<p>Your 2FA code: ${token}</p>`,
   });
 };

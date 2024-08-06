@@ -64,10 +64,21 @@ const NewPasswordForm = () => {
 
     // reset the password
     startTransition(() => {
-      newPassword(values, token).then((data) => {
-        setError(data?.error);
-        setSuccess(data?.success);
-      });
+      newPassword(values, token)
+        .then((data) => {
+          if (data?.error) {
+            // reset form and display error message
+            form.reset();
+            setError(data?.error);
+          }
+
+          if (data?.success) {
+            // reset form and display success message
+            form.reset();
+            setSuccess(data?.success);
+          }
+        })
+        .catch(() => setError("Something went wrong!"));
     });
   };
 

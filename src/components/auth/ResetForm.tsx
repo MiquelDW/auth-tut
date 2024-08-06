@@ -49,10 +49,21 @@ const ResetForm = () => {
 
     // generate reset password token and send the reset password email
     startTransition(() => {
-      reset(values).then((data) => {
-        setError(data?.error);
-        setSuccess(data?.success);
-      });
+      reset(values)
+        .then((data) => {
+          if (data?.error) {
+            // reset form and display error message
+            form.reset();
+            setError(data?.error);
+          }
+
+          if (data?.success) {
+            // reset form and display success message
+            form.reset();
+            setSuccess(data?.success);
+          }
+        })
+        .catch(() => setError("Something went wrong!"));
     });
   };
 

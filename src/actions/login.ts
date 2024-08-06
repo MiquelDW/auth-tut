@@ -6,9 +6,12 @@ import { LoginSchema } from "@/schemas";
 import { signIn } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/route";
 import { AuthError } from "next-auth";
-import { generateVerificationToken } from "@/lib/tokens";
+import {
+  generateVerificationToken,
+  generateTwoFactorToken,
+} from "@/lib/tokens";
 import { getUserByEmail } from "@/data/user";
-import { sendVerificationEmail } from "@/lib/mail";
+import { sendVerificationEmail, sendTwoFactorEmail } from "@/lib/mail";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   // validate the form data again in the backend
@@ -42,6 +45,16 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     return { success: "Confirmation email sent!" };
   }
 
+  // return object to the front-end indicating to display inputs so that the user can enter the 2FA code
+  if (existingUser.isTwoFactorEnabled) {
+    // generate a six digit two-factor token for the user's email
+    const twoFactorToken = await generateTwoFactorToken(existingUser.email);
+    // send two-factor email to the user
+    await sendTwoFactorEmail(twoFactorToken.email, twoFactorToken.token);
+
+    return { twoFactor: true };
+  }
+
   try {
     // Authenticate user using the defined "credentials" provider with the user's email and password (credentials).
     // Upon successful authentication, the server generates a JWT containing user information (claims) and other things.
@@ -61,15 +74,12 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
       switch (err.type) {
         case "CredentialsSignin":
           return { error: "Invalid credentials!" };
-        case "AccessDenied":
-          return { error: err.type };
         default:
           return { error: "Something went wrong!" };
       }
     }
 
     // rethrow the error to make sure the user gets redirected (to /settings)
-    // ?????????????????????
     throw err;
   }
 };

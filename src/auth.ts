@@ -4,6 +4,7 @@ import authConfig from "./auth.config";
 import { db } from "./lib/db";
 import { getUserById } from "./data/user";
 import { UserRole } from "@prisma/client";
+import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
 
 declare module "next-auth" {
   /**
@@ -69,7 +70,20 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       // display error if user does not exist in db or if user's email isn't verified
       if (!existingUser || !existingUser.emailVerified) return false;
 
-      // TODO: Add 2FA check
+      if (existingUser.isTwoFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+          existingUser.id,
+        );
+
+        // prevent signin and display error if user didn't complete 2FA
+        if (!twoFactorConfirmation) return false;
+
+        // delete two-factor confirmation for next sign in
+        // personal choice, you don't have to do this. You can also just add an 'expires' field in the 'TwoFactorConfirmation' table
+        await db.twoFactorConfirmation.delete({
+          where: { id: twoFactorConfirmation.id },
+        });
+      }
 
       return true;
     },

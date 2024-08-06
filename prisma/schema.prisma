@@ -20,15 +20,31 @@ enum UserRole {
 
 // data models (tables)
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-  password      String?
-  role          UserRole  @default(USER)
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?              @map("email_verified")
+  image                 String?
+  password              String?
+  role                  UserRole               @default(USER)
+  isTwoFactorEnabled    Boolean                @default(false)
+  // store two-factor confirmation entry (indicates that a single User can be linked to a single two-factor confirmation entry)
+  TwoFactorConfirmation TwoFactorConfirmation?
   // store account entries (indicates that a single User can be linked to multiple account entries)
-  accounts      Account[]
+  accounts              Account[]
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String
+  // one-to-one relationship: Each User can be associated with one two-factor confirmation record, and each two-factor confirmation record can be associated with one User (FK 'userId')
+  // if 'user' entry gets deleted, the associated 'TwoFactorConfirmation' entry will also be deleted (Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // you can add this instead of manually deleting 2FA from users if you want to
+  // expires DateTime
+
+  // unique rule for the of 'userId' (necessary for one-to-one relationship)
+  @@unique([userId])
 }
 
 model Account {
@@ -46,6 +62,7 @@ model Account {
   session_state     String?
 
   // one-to-many relationship: One User can be associated with many Accounts ('Account[]'), but each Account is associated with one User (FK 'userId')
+  // if 'user' entry gets deleted, the associated account entry will also be deleted (Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // unique rule for the combination of 'provider' and 'providerAccountId'
@@ -64,6 +81,16 @@ model VerificationToken {
 }
 
 model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  // unique rule for the combination of 'email' and 'token'
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
   id      String   @id @default(cuid())
   email   String
   token   String   @unique

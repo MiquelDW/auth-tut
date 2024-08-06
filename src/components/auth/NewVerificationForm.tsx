@@ -40,8 +40,15 @@ const NewVerificationForm = () => {
     startTransition(() => {
       newVerification(token)
         .then((data) => {
-          setError(data.error);
-          setSuccess(data.success);
+          if (data?.error) {
+            // display error message
+            setError(data?.error);
+          }
+
+          if (data?.success) {
+            // display success message
+            setSuccess(data?.success);
+          }
         })
         .catch(() => {
           setError("Something went wrong!");
