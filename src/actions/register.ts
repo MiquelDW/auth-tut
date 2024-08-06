@@ -1,4 +1,4 @@
-// action.ts module contains server-side logic RPC functions
+// action.ts module contains server-side logic RPC functions (server actions)
 "use server";
 
 import * as z from "zod";
@@ -23,14 +23,14 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
   // hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // check if user already exists in db
+  // check if email already exists in db
   const existingUser = await getUserByEmail(email);
-  // return error message if user already exists in db
+  // return error message if email already exists in db
   if (existingUser) {
     return { error: "Email already in use!" };
   }
 
-  // create new user in db if it doesn't exist yet
+  // create new user in db if its email doesn't exist yet
   await db.user.create({
     data: {
       email,
@@ -39,7 +39,7 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
     },
   });
 
-  // generate a verification token for the registered user's email
+  // generate a verification token for the registered user
   const verificationToken = await generateVerificationToken(email);
   // send verification email to the user
   await sendVerificationEmail(verificationToken.email, verificationToken.token);

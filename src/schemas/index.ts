@@ -30,3 +30,21 @@ export const RegisterSchema = z.object({
     message: "Minimum 6 characters required",
   }),
 });
+
+// define schema for reset password form
+// defines the structure of the reset password form data
+export const ResetSchema = z.object({
+  // must be a string and valid email address
+  email: z.string().email({
+    message: "Email is required",
+  }),
+});
+
+// define schema for new password form
+// defines the structure of the new password form data
+export const NewPasswordSchema = z.object({
+  // must be a string and minimum 6 characters
+  password: z.string().min(6, {
+    message: "Minimum 6 characters required",
+  }),
+});

@@ -11,7 +11,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 // resolver function validates the form data against the defined schema whenever the form is submitted or its values change
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/schemas";
+import { NewPasswordSchema } from "@/schemas";
 import {
   Form,
   FormField,
@@ -24,19 +24,13 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import FormError from "../FormError";
 import FormSuccess from "../FormSuccess";
-import { login } from "@/actions/login";
-import Link from "next/link";
+import { newPassword } from "@/actions/new-password";
 
-const LoginForm = () => {
+const NewPasswordForm = () => {
   // retrieve the (dynamic) query parameter(s) from the current URL
   const searchParams = useSearchParams();
-  // retrieve the value of the dynamic query parameter "error"
-  const urlError = searchParams.get("error");
-  // determine the error message based on the retrieved value
-  const errorMessage =
-    urlError === "OAuthAccountNotLinked"
-      ? "Email already in use with different provider!"
-      : "";
+  // retrieve the value of the dynamic query parameter "token"
+  const token = searchParams.get("token");
 
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
@@ -45,26 +39,32 @@ const LoginForm = () => {
   const [isPending, startTransition] = useTransition();
 
   // set up the form with type inference and validation (using zod)
-  // zod uses TS to infer the type of the form data based on the 'LoginSchema'
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    // validate submitted or changed form data against 'LoginSchema'
-    resolver: zodResolver(LoginSchema),
-    // specify initial values for form fields
+  // zod uses TS to infer the type of the form data based on the 'NewPasswordSchema'
+  const form = useForm<z.infer<typeof NewPasswordSchema>>({
+    // validate submitted or changed form data against 'NewPasswordSchema'
+    resolver: zodResolver(NewPasswordSchema),
+    // specify initial values for form field
     defaultValues: {
-      email: "",
       password: "",
     },
   });
 
   // callback function that handles onSubmit event of form
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
     // clear messages
     setError("");
     setSuccess("");
 
-    // log the user in
+    // display error if token doesn't exist
+    if (!token) {
+      setError("Missing token!");
+      // break function
+      return;
+    }
+
+    // reset the password
     startTransition(() => {
-      login(values).then((data) => {
+      newPassword(values, token).then((data) => {
         setError(data?.error);
         setSuccess(data?.success);
       });
@@ -73,37 +73,13 @@ const LoginForm = () => {
 
   return (
     <CardWrapper
-      headerLabel="Welcome back"
-      backButtonHref="/auth/register"
-      backButtonLabel="Don't have an account?"
-      showSocial
+      headerLabel="Enter a new password"
+      backButtonHref="/auth/login"
+      backButtonLabel="Back to login"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
-            {/* Email form field */}
-            <FormField
-              // manage the state and validation of this form field
-              control={form.control}
-              // specify which field from the schema it's dealing with
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Password form field */}
             <FormField
               // manage the state and validation of this form field
@@ -122,27 +98,18 @@ const LoginForm = () => {
                       type="password"
                     />
                   </FormControl>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    // change the default rendered element to the one passed as a child, merging their props and behavior
-                    asChild
-                    className="px-0 font-normal"
-                  >
-                    <Link href="/auth/reset">Forgot password?</Link>
-                  </Button>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
 
-          <FormError message={error || errorMessage} />
+          <FormError message={error} />
           <FormSuccess message={success} />
 
           {/* submit button */}
           <Button type="submit" className="w-full">
-            {isPending ? "Logging in..." : "Login"}
+            {isPending ? "Please wait..." : "Reset password"}
           </Button>
         </form>
       </Form>
@@ -150,4 +117,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default NewPasswordForm;

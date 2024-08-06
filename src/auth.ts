@@ -64,7 +64,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return false;
       }
 
-      // search for user in db
+      // search for user in db by given 'user.id'
       const existingUser = await getUserById(user.id);
       // display error if user does not exist in db or if user's email isn't verified
       if (!existingUser || !existingUser.emailVerified) return false;

@@ -20,17 +20,19 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
   // extract validated fields
   const { email, password } = validatedFields.data;
 
-  // search for user in db
-  const user = await getUserByEmail(email);
+  // search for user in db by given 'email'
+  const existingUser = await getUserByEmail(email);
 
-  // return error message if user's credentials aren't valid
-  if (!user || !user.email || !user.password)
-    return { error: "Invalid credentials!" };
+  // return error message if user has not been found by email
+  if (!existingUser || !existingUser.email || !existingUser.password)
+    return { error: "User not found!" };
 
   // return message if user hasn't verified its email yet
-  if (!user.emailVerified) {
+  if (!existingUser.emailVerified) {
     // generate a verification token for the user's email
-    const verificationToken = await generateVerificationToken(user.email);
+    const verificationToken = await generateVerificationToken(
+      existingUser.email,
+    );
     // send verification email to the user
     await sendVerificationEmail(
       verificationToken.email,
