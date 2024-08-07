@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,14 +13,20 @@ export const metadata: Metadata = {
 
 // Root Layout Component wraps around all routes inside the application
 // it ensures a consistent layout for all routes within the application
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // retrieve the user's session object (decoded JWT)
+  const session = await auth();
+
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    // wrap entire application inside a session/context provider
+    <SessionProvider session={session}>
+      <html lang="en">
+        <body className={inter.className}>{children}</body>
+      </html>
+    </SessionProvider>
   );
 }

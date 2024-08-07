@@ -1,22 +1,20 @@
-import { auth, signOut } from "@/auth";
+"use client";
 
-const Settings = async () => {
-  // retrieve the user's session object (decoded JWT)
-  const session = await auth();
+import { logout } from "@/actions/logout";
+import { useCurrentUser } from "@/hooks/use-current-user";
+
+const Settings = () => {
+  // retrieve user's data from the current session
+  const user = useCurrentUser();
+
+  // callback function to handle onClick event
+  const onClick = () => {
+    logout();
+  };
 
   return (
-    <div>
-      {JSON.stringify(session)}
-      <form
-        action={async () => {
-          "use server";
-
-          // remove the session cookies stored in the client's browser (JWT is stored in an HttpOnly cookie on the client), effectively ending the session and logging the user out
-          await signOut({ redirectTo: "/auth/login" });
-        }}
-      >
-        <button type="submit">Sign out</button>
-      </form>
+    <div className="rounded-xl bg-white p-10">
+      <button onClick={onClick}>Sign out</button>
     </div>
   );
 };

@@ -68,7 +68,7 @@ export const generatePasswordResetToken = async (email: string) => {
 export const generateTwoFactorToken = async (email: string) => {
   // generate a six digit two factor token
   const token = crypto.randomInt(100_000, 1_000_000).toString();
-  // define when token should expire (1 hour in the future)
+  // define when token should expire (1 hour in the future) - change to 5 min for better secturity
   // 3000 should be 1000, might be due to environment error
   const expires = new Date(new Date().getTime() + 3600 * 3000);
 
