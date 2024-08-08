@@ -17,7 +17,6 @@ export const LoginSchema = z.object({
 });
 
 // define schema for register form
-// defines the structure of the register form data
 export const RegisterSchema = z.object({
   name: z.string().min(1, {
     message: "Name is required",
@@ -31,7 +30,6 @@ export const RegisterSchema = z.object({
 });
 
 // define schema for reset password form
-// defines the structure of the reset password form data
 export const ResetSchema = z.object({
   email: z.string().email({
     message: "Email is required",
@@ -39,9 +37,13 @@ export const ResetSchema = z.object({
 });
 
 // define schema for new password form
-// defines the structure of the new password form data
 export const NewPasswordSchema = z.object({
   password: z.string().min(6, {
     message: "Minimum 6 characters required",
   }),
+});
+
+// define schema for settings form
+export const SettingsSchema = z.object({
+  name: z.optional(z.string()),
 });

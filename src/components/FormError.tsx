@@ -6,6 +6,7 @@ interface FormErrorProps {
 }
 
 const FormError = ({ message }: FormErrorProps) => {
+  // display nothing when value for 'message' is not provided
   if (!message) return null;
 
   return (

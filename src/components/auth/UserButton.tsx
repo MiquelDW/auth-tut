@@ -13,7 +13,7 @@ import LogoutButton from "./LogoutButton";
 import { IoExitOutline } from "react-icons/io5";
 
 const UserButton = () => {
-  // retrieve user's data from the current session
+  // retrieve the user's data from the session object
   const user = useCurrentUser();
 
   return (
@@ -34,12 +34,12 @@ const UserButton = () => {
       </DropdownMenuTrigger>
 
       {/* this component pops out when the dropdown menu is triggered */}
-      <DropdownMenuContent>
+      <DropdownMenuContent className="p-0">
         <LogoutButton>
-          <DropdownMenuContent className="flex items-center">
+          <DropdownMenuItem className="flex items-center gap-1 p-2.5 text-sm hover:bg-zinc-100">
             <IoExitOutline className="mr-2 h-4 w-4" />
             Logout
-          </DropdownMenuContent>
+          </DropdownMenuItem>
         </LogoutButton>
       </DropdownMenuContent>
     </DropdownMenu>

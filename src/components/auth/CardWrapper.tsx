@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 import BackButton from "./BackButton";
 import Header from "./Header";
 import Social from "./Social";
+import { cn } from "@/lib/utils";
 
 // predefine object structure for the given 'props' object
 interface CardWrapperProps {

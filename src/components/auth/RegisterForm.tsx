@@ -32,7 +32,7 @@ const RegisterForm = () => {
   const [isPending, startTransition] = useTransition();
 
   // set up the form with type inference and validation (using zod)
-  // zod uses TS to infer the type of the form data based on the 'RegisterSchema'
+  // zod uses TS to infer the type of the (form) data based on the 'RegisterSchema'
   const form = useForm<z.infer<typeof RegisterSchema>>({
     // validate submitted or changed form data against 'RegisterSchema'
     resolver: zodResolver(RegisterSchema),

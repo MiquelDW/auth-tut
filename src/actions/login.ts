@@ -56,13 +56,13 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
   }
 
   try {
-    // Authenticate user using the defined "credentials" provider with the user's email and password (credentials).
-    // Upon successful authentication, the server generates a JWT containing user information (claims) and other things.
-    // The JWT is stored in a secure HttpOnly cookie or local storage on the client.
-    // The session is now active. The JWT represents the session.
-    // For subsequent requests, the client sends the JWT to the server.
-    // The server verifies the JWT. If valid, the request is processed, and considers the user authenticated and authorized to access the requested resource.
-    // The session ends when the JWT expires or the user logs out
+    // Authenticate user using the defined "credentials" provider. The server verifies the user's credentials against stored user data in db.
+    // Upon successful authentication/login procedure, the server generates a JWT containing a Header, Payload and the Signature which are necessary to extract the claims from the Payload (claims consists of info about the user and session for applications to understand the session data and make authentication and authorization decisions).
+    // The JWT is stored in a secure HttpOnly cookie. This type of cookie is not accessible via JavaScript, which helps mitigate the risk of XSS attacks.
+    // When the user makes subsequent requests to the server, the browser includes the HttpOnly cookie containing the JWT.
+    // The server verifies the JWT to ensure it's valid. If valid, the server extracts the claims from the Payload.
+    // The server uses the session data (claims) to authenticate and authorize the user for the requested action.
+    // The session ends when the JWT expires or when the user logs out.
     await signIn("credentials", {
       email,
       password,

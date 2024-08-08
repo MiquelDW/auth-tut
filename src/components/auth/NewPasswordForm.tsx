@@ -39,7 +39,7 @@ const NewPasswordForm = () => {
   const [isPending, startTransition] = useTransition();
 
   // set up the form with type inference and validation (using zod)
-  // zod uses TS to infer the type of the form data based on the 'NewPasswordSchema'
+  // zod uses TS to infer the type of the (form) data based on the 'NewPasswordSchema'
   const form = useForm<z.infer<typeof NewPasswordSchema>>({
     // validate submitted or changed form data against 'NewPasswordSchema'
     resolver: zodResolver(NewPasswordSchema),

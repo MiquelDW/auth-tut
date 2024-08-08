@@ -12,8 +12,13 @@ declare module "next-auth" {
    */
   interface Session {
     user: {
-      /** The user's postal address. */
+      /** The user's role within the application */
       role: UserRole;
+      /** Status of the user's 2FA */
+      isTwoFactorEnabled: boolean;
+      /** Checks if user signed in with OAuth account */
+      isOAuth: boolean;
+
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.
        * In this case, the default session user properties will be overwritten,
@@ -26,11 +31,16 @@ declare module "next-auth" {
 
 // The `JWT` interface can be found in the `next-auth/jwt` submodule
 import { JWT } from "next-auth/jwt";
+import { getAccountByUserId } from "./data/account";
 declare module "next-auth/jwt" {
   /** Returned by the `jwt` callback and `auth`, when using JWT sessions */
   interface JWT {
-    /** The user's role. */
+    /** The user's role */
     role: UserRole;
+    /** Status of the user's 2FA */
+    isTwoFactorEnabled: boolean;
+    /** Checks if user signed in with OAuth account */
+    isOAuth: boolean;
   }
 }
 
@@ -85,6 +95,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         });
       }
 
+      // allow user to login
       return true;
     },
     // invoke callback when JWT is created or updated, the returned token will be forwarded to the session callback
@@ -92,28 +103,62 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       // return token if user is logged out
       if (!token.sub) return token;
 
-      // check if user already exists in db
+      // retrieve user from db by the given user id (token.sub)
       const existingUser = await getUserById(token.sub);
       // return token if user does not exist in db
       if (!existingUser) return token;
 
-      // expand the JWT with the role of the retrieved user from db
-      token.role = existingUser.role;
+      // retrieve the user's Account from db by the given user id (token.sub)
+      const existingAccount = await getAccountByUserId(token.sub);
+      // return token if user's Account does not exist in db
+      if (!existingAccount) return token;
 
+      // assign the user information fields again with the data of the retrieved user in case its data has been updated in the db and the session data needs to reflect those changes
+      token.name = existingUser.name;
+      token.email = existingUser.email;
+      // also, expand the JWT with the role & 2FA status of the retrieved user
+      token.role = existingUser.role;
+      token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+      token.isOAuth = !!existingAccount;
+
+      console.log(existingUser.role);
+
+      // return the JWT
       return token;
     },
-    // invoke callback whenever you retrieve current session (e.g. with Auth())
+    // invoke callback whenever you request session data (e.g. with Auth())
     async session({ session, token }) {
-      // retrieve the JSON Web Token's (JWT) 'id' and store it in the session
+      // retrieve the JWT's 'id' and store it in the user object from the session
       if (token.sub && session.user) {
         session.user.id = token.sub;
       }
 
-      // retrieve the JSON Web Token's (JWT) 'role' and store it in the session
-      if (token.sub && session.user) {
+      // retrieve the JWT's 'role' and store it in the user object from the session
+      if (token.role && session.user) {
         session.user.role = token.role;
       }
 
+      // retrieve the JWT's 'isTwoFactorEnabled' and store it in the user object from the session
+      if (token.role && session.user) {
+        session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
+      }
+
+      // retrieve the JWT's 'name' and store it in the user object from the session
+      if (token.name && session.user && token.email) {
+        session.user.name = token.name;
+      }
+
+      // retrieve the JWT's 'email' and store it in the user object from the session
+      if (token.email && session.user) {
+        session.user.email = token.email;
+      }
+
+      // retrieve the JWT's 'isTwoFactorEnabled' and store it in the user object from the session
+      if (token.isOAuth && session.user) {
+        session.user.isOAuth = token.isOAuth;
+      }
+
+      // return the session data
       return session;
     },
   },

@@ -6,6 +6,7 @@ interface FormSuccessProps {
 }
 
 const FormSuccess = ({ message }: FormSuccessProps) => {
+  // display nothing when value for 'message' is not provided
   if (!message) return null;
 
   return (

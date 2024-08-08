@@ -46,7 +46,7 @@ const LoginForm = () => {
   const [isPending, startTransition] = useTransition();
 
   // set up the form with type inference and validation (using zod)
-  // zod uses TS to infer the type of the form data based on the 'LoginSchema'
+  // zod uses TS to infer the type of the (form) data based on the 'LoginSchema'
   const form = useForm<z.infer<typeof LoginSchema>>({
     // validate submitted or changed form data against 'LoginSchema'
     resolver: zodResolver(LoginSchema),

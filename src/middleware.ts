@@ -16,12 +16,13 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
-  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isApiAuthRoute = nextUrl.pathname.includes(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
   // check if user is trying to access an authentication API route
   if (isApiAuthRoute) {
+    // allow user to access requested route
     return null;
   }
 
@@ -31,16 +32,19 @@ export default auth((req) => {
     if (isLoggedIn) {
       return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
+
+    // allow user to access requested route
     return null;
   }
 
   // check if user is not logged in and is trying to access a non-public route
-  // this check needs to be done last, otherwise infinite redirect loop to '/auth/login'
+  // this check needs to be done last, otherwise infinite redirect loop to '/auth/login' if user is logged out and tries to access an auth route
   if (!isLoggedIn && !isPublicRoute) {
     // redirect user to login page
     return Response.redirect(new URL("/auth/login", nextUrl));
   }
 
+  // allow user to access requested route
   return null;
 });
 
