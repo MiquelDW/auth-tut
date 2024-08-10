@@ -30,8 +30,9 @@ import Link from "next/link";
 const LoginForm = () => {
   // retrieve the (dynamic) query parameter(s) from the current URL
   const searchParams = useSearchParams();
-  // retrieve the value of the dynamic query parameter "error"
+  // retrieve the value of the dynamic query parameters
   const urlError = searchParams.get("error");
+  const callbackUrl = searchParams.get("callbackUrl");
   // determine the error message based on the retrieved value
   const errorMessage =
     urlError === "OAuthAccountNotLinked"
@@ -65,7 +66,7 @@ const LoginForm = () => {
 
     // log the user in
     startTransition(() => {
-      login(values)
+      login(values, callbackUrl)
         .then((data) => {
           if (data?.error) {
             // reset form and display error message
@@ -98,60 +99,87 @@ const LoginForm = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
-            {/* Email form field */}
-            <FormField
-              // manage the state and validation of this form field
-              control={form.control}
-              // specify which field from the schema it's dealing with
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {showTwoFactor && (
+              // Two-Factor Authentication Form field
+              <FormField
+                // manage the state and validation of this form field
+                control={form.control}
+                // specify which field from the schema it's dealing with
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Two Factor Code</FormLabel>
+                    <FormControl>
+                      <Input
+                        // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
+                        {...field}
+                        disabled={isPending}
+                        placeholder="123456"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            {!showTwoFactor && (
+              <>
+                {/* Email form field */}
+                <FormField
+                  // manage the state and validation of this form field
+                  control={form.control}
+                  // specify which field from the schema it's dealing with
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
+                          {...field}
+                          disabled={isPending}
+                          placeholder="john.doe@example.com"
+                          type="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {/* Password form field */}
-            <FormField
-              // manage the state and validation of this form field
-              control={form.control}
-              // specify which field from the schema it's dealing with
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
-                      {...field}
-                      disabled={isPending}
-                      placeholder="********"
-                      type="password"
-                    />
-                  </FormControl>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    // change the default rendered element to the one passed as a child, merging their props and behavior
-                    asChild
-                    className="px-0 font-normal"
-                  >
-                    <Link href="/auth/reset">Forgot password?</Link>
-                  </Button>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Password form field */}
+                <FormField
+                  // manage the state and validation of this form field
+                  control={form.control}
+                  // specify which field from the schema it's dealing with
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          // 'field' object contains the necessary props and methods to connect the input field with react-hook-form's state management
+                          {...field}
+                          disabled={isPending}
+                          placeholder="********"
+                          type="password"
+                        />
+                      </FormControl>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        // change the default rendered element to the one passed as a child, merging their props and behavior
+                        asChild
+                        className="px-0 font-normal"
+                      >
+                        <Link href="/auth/reset">Forgot password?</Link>
+                      </Button>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </div>
 
           <FormError message={error || errorMessage} />
@@ -159,7 +187,11 @@ const LoginForm = () => {
 
           {/* submit button */}
           <Button type="submit" className="w-full">
-            {isPending ? "Logging in..." : "Login"}
+            {showTwoFactor ? (
+              <>{isPending ? "Confirming" : "Confirm"}</>
+            ) : (
+              <>{isPending ? "Logging in..." : "Login"}</>
+            )}
           </Button>
         </form>
       </Form>

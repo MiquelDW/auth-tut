@@ -10,10 +10,16 @@ import {
   generateVerificationToken,
   generateTwoFactorToken,
 } from "@/lib/tokens";
+import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
 import { getUserByEmail } from "@/data/user";
 import { sendVerificationEmail, sendTwoFactorEmail } from "@/lib/mail";
+import { db } from "@/lib/db";
+import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
 
-export const login = async (values: z.infer<typeof LoginSchema>) => {
+export const login = async (
+  values: z.infer<typeof LoginSchema>,
+  callbackUrl?: string | null,
+) => {
   // validate the form data again in the backend
   const validatedFields = LoginSchema.safeParse(values);
 
@@ -21,7 +27,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
   if (!validatedFields.success) return { error: "Invalid fields!" };
 
   // extract validated fields
-  const { email, password } = validatedFields.data;
+  const { email, password, code } = validatedFields.data;
 
   // search for user in db by given 'email'
   const existingUser = await getUserByEmail(email);
@@ -45,14 +51,53 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     return { success: "Confirmation email sent!" };
   }
 
-  // return object to the front-end indicating to display inputs so that the user can enter the 2FA code
+  // check if user 2FA'd if its enabled
   if (existingUser.isTwoFactorEnabled) {
-    // generate a six digit two-factor token for the user's email
-    const twoFactorToken = await generateTwoFactorToken(existingUser.email);
-    // send two-factor email to the user
-    await sendTwoFactorEmail(twoFactorToken.email, twoFactorToken.token);
+    if (code) {
+      // search for two-factor token of user
+      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
+      if (!twoFactorToken) return { error: "Invalid email!" };
 
-    return { twoFactor: true };
+      // return an error if given 'code' doesn't match the code send to the user (code that's been retrieved from db)
+      if (twoFactorToken.token !== code) {
+        return { error: "Invalid code!" };
+      }
+
+      // check if the retrieved code has expired
+      const hasExpired = new Date(twoFactorToken.expires) < new Date();
+      if (hasExpired) return { error: "Code expired!" };
+
+      // remove two-factor token from db after user passed every check
+      await db.twoFactorToken.delete({
+        where: { id: twoFactorToken.id },
+      });
+
+      // check if user has an existing two-factor auth confirmation
+      const existingConfirmation = await getTwoFactorConfirmationByUserId(
+        existingUser.id,
+      );
+      // remove two-factor auth confirmation from db after if user already has it
+      if (existingConfirmation) {
+        await db.twoFactorConfirmation.delete({
+          where: { id: existingConfirmation.id },
+        });
+      }
+
+      // create new two-factor auth confirmation if user doesn't already have one
+      await db.twoFactorConfirmation.create({
+        data: {
+          userId: existingUser.id,
+        },
+      });
+    } else {
+      // generate a six digit two-factor token for the user's email
+      const twoFactorToken = await generateTwoFactorToken(existingUser.email);
+      // send two-factor email to the user
+      await sendTwoFactorEmail(twoFactorToken.email, twoFactorToken.token);
+
+      // return object to the front-end indicating to display inputs so that the user can enter the 2FA code
+      return { twoFactor: true };
+    }
   }
 
   try {
@@ -67,7 +112,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
       email,
       password,
       // redirect user to /settings upon success
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   } catch (err) {
     if (err instanceof AuthError) {

@@ -4,9 +4,11 @@ import { Resend } from "resend";
 // this instance can be used to interact with the Resend API to send emails to users
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const domain = process.env.NEXT_PUBLIC_APP_URL;
+
 export const sendVerificationEmail = async (email: string, token: string) => {
   // link that redirects user to a page to verify email
-  const verificationLink = `http://localhost:3000/auth/new-verification?token=${token}`;
+  const verificationLink = `${domain}/auth/new-verification?token=${token}`;
 
   // send email to the user
   await resend.emails.send({
@@ -21,7 +23,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
 export const sendPasswordEmail = async (email: string, token: string) => {
   // link that redirects user to a page to change password
-  const resetLink = `http://localhost:3000/auth/new-password?token=${token}`;
+  const resetLink = `${domain}/auth/new-password?token=${token}`;
 
   // send email to the user
   await resend.emails.send({

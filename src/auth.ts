@@ -121,8 +121,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
       token.isOAuth = !!existingAccount;
 
-      console.log(existingUser.role);
-
       // return the JWT
       return token;
     },
@@ -139,7 +137,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
 
       // retrieve the JWT's 'isTwoFactorEnabled' and store it in the user object from the session
-      if (token.role && session.user) {
+      if (token.isTwoFactorEnabled && session.user) {
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
       }
 
@@ -153,11 +151,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.email = token.email;
       }
 
-      // retrieve the JWT's 'isTwoFactorEnabled' and store it in the user object from the session
+      // retrieve the JWT's 'isOAuth' and store it in the user object from the session
       if (token.isOAuth && session.user) {
         session.user.isOAuth = token.isOAuth;
       }
 
+      console.log(token.role, session.user.role);
       // return the session data
       return session;
     },

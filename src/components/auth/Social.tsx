@@ -6,8 +6,14 @@ import { FaGithub } from "react-icons/fa";
 // import 'signIn' from 'next-auth/react' module if you want to use the function inside a client component
 import { signIn } from "next-auth/react";
 import { DEFAULT_LOGIN_REDIRECT } from "@/route";
+import { useSearchParams } from "next/navigation";
 
 const Social = () => {
+  // retrieve the (dynamic) query parameter(s) from the current URL
+  const searchParams = useSearchParams();
+  // retrieve the value of the dynamic query parameters
+  const callbackUrl = searchParams.get("callbackUrl");
+
   // callback function that handles onClick event
   const onClick = (provider: "google" | "github") => {
     // the client redirects the user to the social login provider (e.g., Google, GitHub) for authentication.
@@ -18,7 +24,7 @@ const Social = () => {
     // The client uses the access token (JWT) to retrieve user information from the social login provider's user info endpoint.
     // The client establishes a session by creating a session ID on the server and storing the corresponding JWT token on the client, typically in a secure HttpOnly cookie.
     signIn(provider, {
-      callbackUrl: DEFAULT_LOGIN_REDIRECT,
+      callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   };
 

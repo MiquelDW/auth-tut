@@ -1,7 +1,14 @@
 // in order to call your database to read or write data in your database, you need to instantiate a database client to access the database
 // instantiate the database client to be able to read and write data in your database
 
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+
+const connectionString = `${process.env.DATABASE_URL}`;
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 declare global {
   // declare global variable 'cachedPrisma' to cache the Prisma client instance across multiple invocations to avoid creating multiple instances in development mode (because of Hot Reload in Next.js), which can improve perforamnce and prevent issues in serverless environments
@@ -11,11 +18,11 @@ declare global {
 let prisma: PrismaClient;
 if (process.env.NODE_ENV === "production") {
   // instantiate DB client to access and to read and write data in your DB (happens only once in production environment)
-  prisma = new PrismaClient();
+  prisma = new PrismaClient({ adapter });
 } else {
   if (!global.cachedPrisma) {
     // instantiate DB client to the 'cachedPrisma' variable if it's null (this instantiating happens only once)
-    global.cachedPrisma = new PrismaClient();
+    global.cachedPrisma = new PrismaClient({ adapter });
   }
 
   // instantiate 'prisma' with the cached DB client

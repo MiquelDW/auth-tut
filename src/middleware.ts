@@ -40,8 +40,20 @@ export default auth((req) => {
   // check if user is not logged in and is trying to access a non-public route
   // this check needs to be done last, otherwise infinite redirect loop to '/auth/login' if user is logged out and tries to access an auth route
   if (!isLoggedIn && !isPublicRoute) {
+    let callbackUrl = nextUrl.pathname;
+    // append the searched page to the current url
+    if (nextUrl.search) {
+      callbackUrl += nextUrl.search;
+    }
+
+    // encode callback url into a valid URL component
+    const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+
     // redirect user to login page
-    return Response.redirect(new URL("/auth/login", nextUrl));
+    // make sure the user goes back to the page where it left off before logging out
+    return Response.redirect(
+      new URL(`/auth/login?callbackurl=${encodedCallbackUrl}`, nextUrl),
+    );
   }
 
   // allow user to access requested route
